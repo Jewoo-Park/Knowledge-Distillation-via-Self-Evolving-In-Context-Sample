@@ -37,9 +37,16 @@ of worked examples evolves.
   - [`subset_analysis.md`](results_nov/results_final/subset_analysis.md)
   - [`protocol_en.md`](results_nov/results_final/protocol_en.md)
 
-**Motivation.** On a 20% sample of four benchmarks, one retrieved example changed low-confidence answers
-(p1 < 0.95) **54%** of the time and very confident ones (p1 ≥ 0.999) only **23%** of the time
-(+31.4 pp [+26.5, +36.2]). See [`results_motiv/analysis.md`](results_nov/results_motiv/analysis.md).
+**Motivation.** On a 20% stratified sample, one retrieved example changed low-confidence answers (p1 < 0.95) much
+more often than very confident ones (p1 ≥ 0.999):
+
+| | Urban | VideoSIS | Video-MME |
+|---|:-:|:-:|:-:|
+| Change rate, p1 < 0.95 | 64% | 64% | 58% |
+| Change rate, p1 ≥ 0.999 | 37% | 27% | 15% |
+| Difference [95% CI] | +26 pp [+17, +35] | +37 pp [+27, +47] | +43 pp [+31, +54] |
+
+See [`results_motiv/analysis.md`](results_nov/results_motiv/analysis.md).
 
 ---
 
@@ -98,9 +105,8 @@ Download the benchmarks from their original sources. They are **not** redistribu
 | Benchmark | Source | Questions used | Used in |
 |---|---|:-:|---|
 | **Urban Video Bench** | [EmbodiedCity/UrbanVideo-Bench](https://huggingface.co/datasets/EmbodiedCity/UrbanVideo-Bench) | 5,355 | main, motivation |
-| **VideoSIS** | the authors' release (`eval.jsonl` + frames) | 4,852 | main, motivation |
+| **VideoSIS** (SIS-Bench, *Self in Space*) | [choucsan/SIS-Bench](https://huggingface.co/datasets/choucsan/SIS-Bench) · [paper](https://arxiv.org/abs/2607.12477) · [GitHub](https://github.com/IntelliSensing/Self-in-Space) | 4,852 | main, motivation |
 | **Video-MME** (v1) | [lmms-lab/Video-MME](https://huggingface.co/datasets/lmms-lab/Video-MME) · [project page](https://video-mme.github.io/home_page.html) | 2,700 | main, motivation |
-| **TempCompass** | [lmms-lab/TempCompass](https://huggingface.co/datasets/lmms-lab/TempCompass) | 7,536 | motivation only |
 
 32 frames are sampled per video. Frames go under `dataset/`.
 
