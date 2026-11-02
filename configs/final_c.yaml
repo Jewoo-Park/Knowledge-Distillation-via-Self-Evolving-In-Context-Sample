@@ -1,0 +1,95 @@
+# Final full test (2026-11-01, user's plan): confidence-gated in-context samples with a self-evolving memory built by
+# gpt-6.1-sol from an empty memory, on Urban Video Bench, VideoSIS and Video-MME side by side; compared with vanilla only.
+# Runner: scripts/run_icl_confidence.py --config configs/final_c.yaml. Protocol: results_nov/results_final/protocol.md.
+# The config of the reported run (its original paths) is results_nov/results_final/config_used.json.
+# Per question: the vanilla answer; when its answer-letter probability p1 < 0.99 or p1 is unreadable, the closest item
+# of this benchmark's memory (cosine of WeMM source-question vectors, other videos only, no similarity floor) is shown
+# and the question answered again; an invalid second answer keeps the vanilla answer. After each block of 50 the labels
+# are used by the five teacher/critic stages to evolve the memory (as the earlier evolve tracks).
+run_root: outputs/final_c
+results_dir: results_nov/results_final
+export: {every_blocks: 5}               # per-benchmark results rewritten every 5 blocks and when a benchmark ends
+generation_caches: []                   # read-only prediction stores of other runs (same input signature = same output)
+confidence:
+  risk_signal: p1                         # absolute gate on the vanilla answer-letter probability
+  p1_db: data/inputs/answer_probs.sqlite   # scripts/compute_p1.py
+  p1_threshold: 0.99                      # chosen on 2026-11-01 from a threshold comparison on all four benchmarks
+  tau: -1.0                               # no similarity floor: the closest appropriate item is always shown
+  top_n: 3
+  m: 10
+  min_utility: -0.05
+  max_worked_chars: 1300                  # example text limit (long examples doubled invalid outputs; ~1,800 with question)
+  validation: {per_candidate: 3, max: 12}
+  teacher_calls_per_track: 3000           # the spend cap below is the binding limit
+  tracks:
+    urban: {gate: p1, select: sim, memory: evolve}
+    videosis: {gate: p1, select: sim, memory: evolve}
+    videomme: {gate: p1, select: sim, memory: evolve}
+stream: data/inputs/stream.jsonl        # Urban, TempCompass, Video-MME (15,591) + VideoSIS (4,852), fixed order
+vanilla: data/inputs/vanilla.sqlite     # vanilla answers of urban / tempcompass / videomme
+videosis_rows: data/inputs/videosis_vanilla_rows   # VideoSIS vanilla answers (same student, no samples)
+baseline_rows: null
+query_cache: data/inputs/query_embeddings.sqlite   # WeMM query vectors (scripts/embed_queries.py)
+query_encoder_signature: data/inputs/encoder_signature.json
+benchmarks:
+  urban: urban_video_bench
+  videosis: VideoSIS
+  videomme: VideoMME
+block_size: 50
+max_blocks: null
+seed: 42
+
+retrieval:
+  key: question
+  pool: listed             # active + held items
+  exclude: group           # drop items of the same original video
+  mode: absolute
+  threshold: -1.0
+  margin: null
+  max_examples: 1
+  exclude_option_text: true   # drop an item whose correct option text equals one of the current options (label free)
+  permute_options: true
+  position: after_video
+
+memory:
+  max_active: 20
+
+stage1:
+  max_selected: 5
+stage4:
+  trial_questions: 6
+  min_vanilla_correct: 2
+  max_rounds: 2
+stage5:
+  recent_usage_blocks: 3
+
+teacher:
+  model: gpt-6.1-sol        # 2026-11-01 user's choice for the final run
+  max_calls: 4000
+  max_usd: 79.5             # user's cap $80; checked before each call, so three parallel calls can add ~$0.3
+  prices: {input: 2.00, cached_input: 0.10, output: 10.00}   # USD per 1M tokens (user-provided)
+student:
+  gpus: [0, 1, 2, 3]
+  backbone:
+    adapter: qwen35_vl
+    checkpoint: Qwen/Qwen3.5-9B
+    local_path: models/Qwen/Qwen3.5-9B
+    checkpoint_sha256: 69cc08429dbff81dc0dd6c213095a71552873b658f3f6f4f200ccc9e3308851a
+    revision: null
+    device: cuda:0
+    dtype: float16
+    attention: eager
+    quantization: 4bit
+    cpu_offload: false
+    enable_thinking: false
+  video: {num_frames: 32, max_pixels: 65536, assumed_sampled_fps: 2.0}
+  generation: {batch_size: 1, max_new_tokens: 512, do_sample: false}
+  system_prompt: "You are answering a video question. Use only visual evidence from the video. Do not invent observations.\n\nGeneral answer rules:\nDo not invent unconfirmed details. Even when evidence is limited, choose exactly one option with the strongest relative observational support; do not abstain or output multiple options.\nBefore answering, check that the selected option means the same relation you judged. Pay particular attention to negation, faster/slower, before/after, and the order of the compared targets.\nFollow the required output format. Briefly note uncertainty only when explanations are allowed. If only an option label is requested, output exactly one label."
+
+embedding:
+  model: tencent/WeMM-Embedding-2B
+  revision: bbd6cd4bf52cfc6716f752a2df80b2706720bd95
+  local_path: models/tencent/WeMM-Embedding-2B
+  chat_template: additional_chat_templates/sentence_transformers.jinja
+  dimension: 2048
+  query_instruction: Find the reasoning instruction whose usage condition best fits this video question.

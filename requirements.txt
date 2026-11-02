@@ -1,0 +1,20 @@
+# Python 3.10, NVIDIA GPU with CUDA 11.8 wheels (tested on RTX 2080 Ti, 11 GB).
+# torch, transformers and bitsandbytes must match exactly: run startup compares the student's runtime identity
+# (these versions included) with the one that produced the vanilla answers in data/inputs/.
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.6.0+cu118
+torchvision==0.21.0+cu118
+transformers==5.19.0
+tokenizers==0.23.3
+safetensors==0.8.0
+huggingface_hub==2.2.0
+accelerate==1.12.0
+bitsandbytes==0.50.2
+qwen-vl-utils==0.0.14
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+pillow==11.2.1
+PyYAML==6.0.2
+pydantic==2.10.6
+openai==1.76.0
+pytest==8.3.5

@@ -1,0 +1,18 @@
+# environments and secrets
+/fuzzy/
+/fuzzy35/
+/.venv/
+.env
+.env.*
+/.secrets/
+# large local files (top level only): weights, benchmark frames, input data, run directories
+/models/
+/dataset/
+/data/
+/outputs/
+/.cache/
+# python and run locks
+__pycache__/
+.pytest_cache/
+*.pyc
+*.lock
