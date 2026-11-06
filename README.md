@@ -19,6 +19,8 @@ of worked examples evolves.
 
 ---
 
+![Figure](assets/figure.png)
+
 ## 📊 Results at a glance
 
 | | Urban Video Bench | VideoSIS | Video-MME |
